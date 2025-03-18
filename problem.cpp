@@ -1,30 +1,71 @@
-#include <iostream>
+ #include <iostream>
 #include <string>
+#include <limits>
 using namespace std;
 
 class User {
+protected:
+    int dataUsage;
+    string discountCode;
+
 public:
-    virtual double calculateBill(int dataUsage, string discountCode = "") = 0;
-    virtual string getUserType() = 0;
+    virtual void input() = 0;
+    virtual double calculateBill() = 0;
+    virtual void display() = 0;
     virtual ~User() {}
 };
 
 class BasicUser : public User {
 public:
-    double calculateBill(int dataUsage, string discountCode = "") override {
+    void input() override {
+        while (true) {
+            cout << "Enter data usage in GB: ";
+            cin >> dataUsage;
+            if (cin.fail() || dataUsage <= 0) {
+                cout << "Data usage must be a positive number. Please try again." << endl;
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            } else {
+                break;
+            }
+        }
+    }
+
+    double calculateBill() override {
         double baseCharge = 500;
         double extraCharge = (dataUsage > 50) ? (dataUsage - 50) * 5 : 0;
         return baseCharge + extraCharge;
     }
-    string getUserType() override {
-        return "Basic";
+
+    void display() override {
+        double extraCharge = (dataUsage > 50) ? (dataUsage - 50) * 5 : 0;
+        double totalBill = calculateBill();
+        cout << "User type = Basic. Extra data charge = Rs " << extraCharge
+             << ". Total bill = Rs " << totalBill << endl;
     }
 };
 
 class PremiumUser : public User {
 public:
-    double calculateBill(int dataUsage, string discountCode = "") override {
-        double baseCharge = 100;
+    void input() override {
+        while (true) {
+            cout << "Enter data usage in GB: ";
+            cin >> dataUsage;
+            if (cin.fail() || dataUsage <= 0) {
+                cout << "Data usage must be a positive number. Please try again." << endl;
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            } else {
+                break;
+            }
+        }
+        cout << "Enter discount code if available (or press Enter to skip): ";
+        cin.ignore();
+        getline(cin, discountCode);
+    }
+
+    double calculateBill() override {
+        double baseCharge = 1000;
         double extraCharge = (dataUsage > 100) ? (dataUsage - 100) * 5 : 0;
         double total = baseCharge + extraCharge;
         if (discountCode == "NET50") {
@@ -32,15 +73,18 @@ public:
         }
         return total;
     }
-    string getUserType() override {
-        return "Premium";
+
+    void display() override {
+        double extraCharge = (dataUsage > 100) ? (dataUsage - 100) * 5 : 0;
+        double totalBill = calculateBill();
+        cout << "User type = Premium. Extra data charge = Rs " << extraCharge
+             << ". Total bill after discount = Rs " << totalBill << endl;
     }
 };
 
 int main() {
     string userType;
-    int dataUsage;
-    string discountCode;
+    User* user = nullptr;
 
     while (true) {
         cout << "Enter Type of User (B for Basic, P for Premium): ";
@@ -49,33 +93,14 @@ int main() {
         cout << "Invalid user type. Please try again." << endl;
     }
 
-    while (true) {
-        cout << "Enter data usage in GB: ";
-        cin >> dataUsage;
-        if (dataUsage > 0) break;
-        cout << "Data usage must be a positive number. Please try again." << endl;
-    }
-
-    User* user;
     if (userType == "B") {
         user = new BasicUser();
-    } else {
+    } else if (userType == "P") {
         user = new PremiumUser();
-        cout << "Enter discount code if available (or press Enter to skip): ";
-        cin.ignore();
-        getline(cin, discountCode);
     }
 
-    double totalBill = user->calculateBill(dataUsage, discountCode);
-    cout << "User type = " << user->getUserType() << ". ";
-    if (userType == "B") {
-        double extraCharge = (dataUsage > 50) ? (dataUsage - 50) * 5 : 0;
-        cout << "Extra data charge = Rs " << extraCharge << ". ";
-    } else {
-        double extraCharge = (dataUsage > 100) ? (dataUsage - 100) * 5 : 0;
-        cout << "Extra data charge = Rs " << extraCharge << ". ";
-    }
-    cout << "Total bill = Rs " << totalBill << endl;
+    user->input();
+    user->display();
 
     delete user;
     return 0;
