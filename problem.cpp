@@ -10,7 +10,7 @@ using namespace std;
 int getCurrentYear() {
     time_t t = time(nullptr);
     tm now;
-    localtime_r(&t, &now);  // Use thread-safe localtime_r instead of localtime
+    localtime_r(&t, &now);  // Thread-safe localtime
     return now.tm_year + 1900;
 }
 
@@ -51,12 +51,9 @@ public:
     }
 
     void display() const {
-        cout << "Registration Number: " << registrationNumber << endl;
-        cout << "Owner Name: " << ownerName << endl;
-        cout << "Model Year: " << modelYear << endl;
+        cout << registrationNumber << ", " << ownerName << ", " << modelYear << endl;
     }
 
-    // Save vehicle to file
     void saveToFile(ofstream &outFile) const {
         size_t regLen = registrationNumber.size();
         size_t ownerLen = ownerName.size();
@@ -68,7 +65,6 @@ public:
         outFile.write(reinterpret_cast<const char*>(&modelYear), sizeof(modelYear));
     }
 
-    // Load vehicle from file
     void loadFromFile(ifstream &inFile) {
         size_t regLen, ownerLen;
         inFile.read(reinterpret_cast<char*>(&regLen), sizeof(regLen));
@@ -115,7 +111,6 @@ void readVehiclesFromFile(const string& filename) {
         Vehicle vehicle;
         vehicle.loadFromFile(inFile);
         vehicle.display();
-        cout << "-------------------------" << endl;
     }
 
     inFile.close();
@@ -123,20 +118,21 @@ void readVehiclesFromFile(const string& filename) {
 
 int main() {
     vector<Vehicle> vehicles;
-    char choice;
-
-    do {
+    int numVehicles;
+    
+    cout << "Enter the total number of vehicles: ";
+    cin >> numVehicles;
+    
+    for (int i = 0; i < numVehicles; ++i) {
         try {
             Vehicle v;
             v.input();
             vehicles.push_back(v);
         } catch (const invalid_argument& e) {
             cerr << "Error: " << e.what() << endl;
+            --i; // Retry input for current vehicle
         }
-        
-        cout << "Do you want to add another vehicle? (y/n): ";
-        cin >> choice;
-    } while (choice == 'y' || choice == 'Y');
+    }
 
     string filename = "vehicles.dat";
     saveVehiclesToFile(vehicles, filename);
